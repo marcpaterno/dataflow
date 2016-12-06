@@ -1,0 +1,14 @@
+process_name: DumperTest
+
+outputs:
+{
+  o1 :
+  {
+    module_type: DataFlowDumper
+  }
+}
+
+physics:
+{
+  e1: [ o1 ]
+}
