@@ -111,7 +111,7 @@ void write_product_node(art::BranchID const& bid,
                            return keyval.second.branchID() == bid;
                          });
   if (it == plist.end()) {
-    os << "Missing information for branch with id " << bid << '\n';
+    os << "#Missing information for branch with id " << bid << '\n';
     return;
   }
   write_id(bid, os);
@@ -120,13 +120,22 @@ void write_product_node(art::BranchID const& bid,
                       os);
 }
 
+void write_module_id(art::Provenance const& p, std::ostream& os) {
+  os << '\"'
+    << p.moduleLabel()
+    << '/'
+    << p.processName()
+    << '\"';
+}
+
 void write_creator_line(art::Provenance const& p, std::ostream& os) {
   // TODO: set the color based upon the process name.
-  os << p.moduleLabel() << " [ color=cyan style=filled ];\n  ";
+  write_module_id(p, os);
+  os << " [ color=cyan style=filled ];\n  ";
   write_id(p, os);
-  os << " -> "
-     << p.moduleLabel()
-     << '\n';
+  os << " -> ";
+  write_module_id(p, os);
+  os << "\n;";
 }
 
 // void write_parent_node(art::BranchID const& parent,
@@ -137,11 +146,10 @@ void write_creator_line(art::Provenance const& p, std::ostream& os) {
 void write_parentage_line(art::Provenance const& p,
                           art::BranchID const& parent,
                           std::ostream& os) {
-  os << p.moduleLabel()
-     << " -> ";
-  //write_parent_node(parent, os);
-  write_product_node(parent, os);
-  os << '\n';
+  write_module_id(p, os);
+  os << " -> \"b"
+     << parent
+     << "\";\n";
 }
 
 void art::DataFlow::processEventProvenance(art::Provenance const& p) {
