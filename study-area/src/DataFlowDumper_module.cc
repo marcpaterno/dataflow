@@ -65,7 +65,6 @@ art::DataFlow::DataFlow(fhicl::TableFragment<Config> const& cfg) :
       "Failed to create output file: " << cfg().dotfile();
   }
 }
-  
 
 void art::DataFlow::preProcessEvent() {
   out_ << "digraph d" << nEvents_ << " {\n";
@@ -105,7 +104,6 @@ void write_product_node(art::Provenance const& p, std::ostream& os) {
   format_product_node(p.friendlyClassName(), p.productInstanceName(), os);
 }
 
-
 void write_product_node(art::BranchID const& bid,
                         std::ostream& os) {
   // Access to the productList is cheap, so not really worth caching.
@@ -130,10 +128,10 @@ void write_product_node(art::BranchID const& bid,
 
 void write_module_id(art::Provenance const& p, std::ostream& os) {
   os << '\"'
-    << p.moduleLabel()
-    << '/'
-    << p.processName()
-    << '\"';
+     << p.moduleLabel()
+     << '/'
+     << p.processName()
+     << '\"';
 }
 
 std::size_t color(std::string const& procname) {
@@ -190,4 +188,3 @@ void art::DataFlow::processEventProvenance(art::Provenance const& p) {
 }
 
 DEFINE_ART_MODULE(art::DataFlowDumper)
-
