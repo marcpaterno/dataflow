@@ -5,6 +5,7 @@ outputs:
   o1 :
   {
     module_type: DataFlowDumper
+    debuglevel: 1
   }
 }
 

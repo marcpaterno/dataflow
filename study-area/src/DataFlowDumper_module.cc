@@ -33,6 +33,7 @@ public:
   struct Config {
     fhicl::Atom<std::string> dotfile { fhicl::Name("dotfile"), "flow.dot" };
     fhicl::Atom<std::string> colorscheme { fhicl::Name("colorscheme"), "set312" };
+    fhicl::Atom<int> debuglevel { fhicl::Name("debuglevel"), 0 };
   };
 
   explicit DataFlow(fhicl::TableFragment<Config> const& cfg);
@@ -51,6 +52,7 @@ private:
   std::ofstream out_;
   int nEvents_;
   std::string colorscheme_;
+  int debug_;
 };
 
 //-----------------------------------------------------------------
@@ -58,7 +60,8 @@ private:
 art::DataFlow::DataFlow(fhicl::TableFragment<Config> const& cfg) :
   out_(cfg().dotfile()),
   nEvents_(0),
-  colorscheme_(cfg().colorscheme())
+  colorscheme_(cfg().colorscheme()),
+  debug_(cfg().debuglevel())
 {
   if (!out_) {
     throw art::Exception(art::errors::FileOpenError) << 
@@ -99,13 +102,22 @@ void format_product_node(std::string const& fcn,
 
 // Write the line defining the node for the product to which this
 // Provenance belongs.
-void write_product_node(art::Provenance const& p, std::ostream& os) {
+void write_product_node(art::Provenance const& p,
+                        std::ostream& os,
+                        int debug) {
+  if (debug > 0) {
+    os << "# write_product_node for provenance: " << static_cast<const void*>(&p) << '\n';
+  }
   write_id(p,os);
   format_product_node(p.friendlyClassName(), p.productInstanceName(), os);
 }
 
 void write_product_node(art::BranchID const& bid,
-                        std::ostream& os) {
+                        std::ostream& os,
+                        int debug) {
+  if (debug > 0) {
+    os << "# write_product_node for bid: " << bid << '\n';
+  }
   // Access to the productList is cheap, so not really worth caching.
   auto const& pmd = art::ProductMetaData::instance();
   auto const& plist = pmd.productList(); // note this is a map
@@ -156,7 +168,11 @@ void write_module_node(art::Provenance const& p,
 
 void write_creator_line(art::Provenance const& p,
                         std::string const& colorscheme,
-                        std::ostream& os) {
+                        std::ostream& os,
+                        int debug) {
+  if (debug > 0) {
+    os << "# write_creator_line for provenance: " << static_cast<const void*>(&p) << '\n';
+  }
   write_module_id(p, os);
   write_module_node(p, colorscheme, os);
   write_module_id(p, os);
@@ -172,7 +188,12 @@ void write_parent_id(art::BranchID const& parent,
 
 void write_parentage_line(art::Provenance const& p,
                           art::BranchID const& parent,
-                          std::ostream& os) {
+                          std::ostream& os,
+                          int debug) {
+  if (debug > 0) {
+    os << "# write_parentage_line for provenance: " << static_cast<const void*>(&p)
+       << " parent " << parent << '\n';
+  }  
   write_parent_id(parent, os);
   os << " -> ";
   write_module_id(p, os);
@@ -180,10 +201,10 @@ void write_parentage_line(art::Provenance const& p,
 }
 
 void art::DataFlow::processEventProvenance(art::Provenance const& p) {
-  write_product_node(p, out_);
-  write_creator_line(p, colorscheme_, out_);
+  write_product_node(p, out_, debug_);
+  write_creator_line(p, colorscheme_, out_, debug_);
   for (art::BranchID const& parent : p.parents()) {
-    write_parentage_line(p, parent, out_);
+    write_parentage_line(p, parent, out_, debug_);
   }
 }
 
