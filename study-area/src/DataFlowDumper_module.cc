@@ -146,28 +146,37 @@ std::size_t color(std::string const& procname) {
   return std::distance(begin(names_seen), it)+1;
 }
 
+void write_module_node(art::Provenance const& p,
+                        std::string const& colorscheme,
+                        std::ostream& os) {
+  os << " [ colorscheme="
+     << colorscheme
+     << " color="
+     << color(p.processName())
+     << " style=filled ];\n";
+}
+
 void write_creator_line(art::Provenance const& p,
                         std::string const& colorscheme,
                         std::ostream& os) {
   write_module_id(p, os);
-  os << " [ colorscheme="
-    << colorscheme
-    << " color="
-     << color(p.processName())
-     << " style=filled ];\n";
-
+  write_module_node(p, colorscheme, os);
   write_module_id(p, os);
   os << " -> ";
   write_id(p, os);
   os << ";\n";
 }
 
+void write_parent_id(art::BranchID const& parent,
+                     std::ostream& os) {
+ os << 'b' << parent;
+}
+
 void write_parentage_line(art::Provenance const& p,
                           art::BranchID const& parent,
                           std::ostream& os) {
-  os << 'b'
-     << parent
-    << " -> ";
+  write_parent_id(parent, os);
+  os << " -> ";
   write_module_id(p, os);
   os << ";\n";
 }
