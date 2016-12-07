@@ -27,10 +27,9 @@ namespace art {
 
 class art::DataFlow {
 public:
-  // We have no configuration parameters, but the Config type is
-  // required to exist.
   struct Config {
     fhicl::Atom<std::string> dotfile { fhicl::Name("dotfile"), "flow.dot" };
+    fhicl::Atom<std::string> colorscheme { fhicl::Name("colorscheme"), "set312" };
   };
 
   explicit DataFlow(fhicl::TableFragment<Config> const& cfg);
@@ -42,13 +41,15 @@ public:
 private:
   std::ofstream out_;
   int nEvents_;
+  std::string colorscheme_;
 };
 
 //-----------------------------------------------------------------
 
 art::DataFlow::DataFlow(fhicl::TableFragment<Config> const& cfg) :
   out_(cfg().dotfile()),
-  nEvents_(0)  
+  nEvents_(0),
+  colorscheme_(cfg().colorscheme())
 {
   if (out_) {
     std::cout << "Created output file: " << cfg().dotfile() << std::endl;
@@ -128,33 +129,45 @@ void write_module_id(art::Provenance const& p, std::ostream& os) {
     << '\"';
 }
 
-void write_creator_line(art::Provenance const& p, std::ostream& os) {
-  // TODO: set the color based upon the process name.
-  write_module_id(p, os);
-  os << " [ color=cyan style=filled ];\n  ";
-  write_id(p, os);
-  os << " -> ";
-  write_module_id(p, os);
-  os << "\n;";
+std::size_t color(std::string const& procname) {
+  static std::vector<std::string> names_seen;
+  auto it = std::find(begin(names_seen), end(names_seen), procname);
+  if (it == end(names_seen)) {
+    names_seen.push_back(procname);
+    return names_seen.size();
+  }
+  return std::distance(begin(names_seen), it)+1;
 }
 
-// void write_parent_node(art::BranchID const& parent,
-//                        std::ostream& os) {
-//   os << parent;
-// }
+void write_creator_line(art::Provenance const& p,
+                        std::string const& colorscheme,
+                        std::ostream& os) {
+  write_module_id(p, os);
+  os << " [ colorscheme="
+    << colorscheme
+    << " color="
+     << color(p.processName())
+     << " style=filled ];\n";
+
+  write_module_id(p, os);
+  os << " -> ";
+  write_id(p, os);
+  os << ";\n";
+}
 
 void write_parentage_line(art::Provenance const& p,
                           art::BranchID const& parent,
                           std::ostream& os) {
-  write_module_id(p, os);
-  os << " -> \"b"
+  os << 'b'
      << parent
-     << "\";\n";
+    << " -> ";
+  write_module_id(p, os);
+  os << ";\n";
 }
 
 void art::DataFlow::processEventProvenance(art::Provenance const& p) {
   write_product_node(p, out_);
-  write_creator_line(p, out_);
+  write_creator_line(p, colorscheme_, out_);
   for (art::BranchID const& parent : p.parents()) {
     write_parentage_line(p, parent, out_);
   }
