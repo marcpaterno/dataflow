@@ -14,8 +14,11 @@
 #include "fhiclcpp/types/Atom.h"
 #include "fhiclcpp/types/Name.h"
 
+#include <algorithm>
 #include <fstream>
+#include <iterator>
 #include <string>
+#include <vector>
 
 namespace art {
   // DataFlow is the class we define to provide our specialization of
@@ -34,8 +37,14 @@ public:
 
   explicit DataFlow(fhicl::TableFragment<Config> const& cfg);
 
+  // Prepare to write out the graph for an event.
   void preProcessEvent();
+
+  // Finalize writing the graph for an event.
   void postProcessEvent();
+
+  // Write the graph description lines for the data product associated
+  // with the given provenance.
   void processEventProvenance(art::Provenance const& prov);
 
 private:
@@ -51,9 +60,7 @@ art::DataFlow::DataFlow(fhicl::TableFragment<Config> const& cfg) :
   nEvents_(0),
   colorscheme_(cfg().colorscheme())
 {
-  if (out_) {
-    std::cout << "Created output file: " << cfg().dotfile() << std::endl;
-  } else {
+  if (!out_) {
     throw art::Exception(art::errors::FileOpenError) << 
       "Failed to create output file: " << cfg().dotfile();
   }
