@@ -106,7 +106,7 @@ void write_product_node(art::Provenance const& p,
                         std::ostream& os,
                         int debug) {
   if (debug > 0) {
-    os << "# write_product_node for provenance: " << static_cast<const void*>(&p) << '\n';
+    os << "# write_product_node for provenance: " << &p << '\n';
   }
   write_id(p,os);
   format_product_node(p.friendlyClassName(), p.productInstanceName(), os);
@@ -171,7 +171,7 @@ void write_creator_line(art::Provenance const& p,
                         std::ostream& os,
                         int debug) {
   if (debug > 0) {
-    os << "# write_creator_line for provenance: " << static_cast<const void*>(&p) << '\n';
+    os << "# write_creator_line for provenance: " << &p << '\n';
   }
   write_module_id(p, os);
   write_module_node(p, colorscheme, os);
@@ -191,7 +191,7 @@ void write_parentage_line(art::Provenance const& p,
                           std::ostream& os,
                           int debug) {
   if (debug > 0) {
-    os << "# write_parentage_line for provenance: " << static_cast<const void*>(&p)
+    os << "# write_parentage_line for provenance: " << &p
        << " parent " << parent << '\n';
   }  
   write_parent_id(parent, os);
